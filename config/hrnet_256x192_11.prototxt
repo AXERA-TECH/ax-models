@@ -1,0 +1,65 @@
+input_type: INPUT_TYPE_ONNX
+output_type: OUTPUT_TYPE_JOINT
+target_hardware: TARGET_HARDWARE_AX620
+input_tensors {
+    color_space: TENSOR_COLOR_SPACE_RGB
+}
+cpu_backend_settings {
+    onnx_setting {
+        mode: DISABLED
+    }
+    axe_setting {
+        mode: ENABLED
+        axe_param {
+            optimize_slim_model: true
+        }
+    }
+}
+neuwizard_conf {
+    operator_conf {
+        input_conf_items {
+            attributes {
+                input_modifications {
+                    affine_preprocess {
+                        slope: 1
+                        slope_divisor: 255
+                        bias: 0
+                    }
+                }
+            }
+        }
+        input_conf_items {
+            attributes {
+                input_modifications {
+                   input_normalization {
+                       mean:[0.485, 0.456, 0.406]
+                       std:[0.229, 0.224, 0.225]
+                   }
+                }
+            }
+        }
+   }
+   dataset_conf_calibration {
+        path: "../common/coco_1000.tar" # 一个具有 1000 张图片的 tar 包，用于编译过程中对模型校准
+        type: DATASET_TYPE_TAR
+        size: 32
+   }
+   dataset_conf_error_measurement {
+        path: "../common/coco_1000.tar" # 用于编译过程中测量偏差
+        type: DATASET_TYPE_TAR
+        size: 4
+        batch_size: 1
+    }
+    evaluation_conf {
+            path: "neuwizard.evaluator.error_measure_evaluator"
+            type: EVALUATION_TYPE_ERROR_MEASURE
+            source_ir_types: IR_TYPE_NATIVE
+            ir_types: IR_TYPE_LAVA
+    }
+}
+# pulsar compiler 的配置参数
+pulsar_conf {
+    ax620_virtual_npu: AX620_VIRTUAL_NPU_MODE_111
+    batch_size: 1
+    debug : false
+}
